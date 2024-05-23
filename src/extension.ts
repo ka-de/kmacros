@@ -12,14 +12,16 @@ export function activate(context: vscode.ExtensionContext) {
           selections.forEach((selection) => {
             const text = editor.document.getText(selection);
             const lines = text.split("\n").filter((line) => line.trim() !== ""); // Split text into lines and filter out empty lines
+            let replacedText = "";
             lines.forEach((line, index) => {
               const formattedText = `- [${line}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/ponyxl_loras_shrunk/${line}?download=true)`;
               if (index === 0) {
-                editBuilder.replace(selection, formattedText);
+                replacedText += formattedText;
               } else {
-                editBuilder.insert(selection.end, `\n${formattedText}`);
+                replacedText += `\n${formattedText}`;
               }
             });
+            editBuilder.replace(selection, replacedText);
           });
         });
       }
