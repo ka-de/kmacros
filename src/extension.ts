@@ -15,10 +15,9 @@ export function activate(context: vscode.ExtensionContext) {
             let replacedText = "";
             lines.forEach((line, index) => {
               const formattedText = `- [${line}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/ponyxl_loras_shrunk/${line}?download=true)`;
-              if (index === 0) {
-                replacedText += formattedText;
-              } else {
-                replacedText += `\n${formattedText}`;
+              replacedText += formattedText;
+              if (index < lines.length - 1) {
+                replacedText += "\n"; // Add a newline only if it's not the last line
               }
             });
             editBuilder.replace(selection, replacedText);
