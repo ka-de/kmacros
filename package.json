@@ -2,13 +2,17 @@
   "name": "kmacros",
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.89.0"
   },
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ka-de/kmacros"
+  },
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
