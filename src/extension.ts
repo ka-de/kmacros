@@ -14,7 +14,9 @@ export function activate(context: vscode.ExtensionContext) {
             const lines = text.split("\n").filter((line) => line.trim() !== ""); // Split text into lines and filter out empty lines
             let replacedText = "";
             lines.forEach((line, index) => {
-              const formattedText = `- [${line}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/ponyxl_loras_shrunk/${line}?download=true)`;
+              // Remove newline characters within the line
+              const sanitizedLine = line.replace(/\n/g, "");
+              const formattedText = `- [${sanitizedLine}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/ponyxl_loras_shrunk/${sanitizedLine}?download=true)`;
               replacedText += formattedText;
               if (index < lines.length - 1) {
                 replacedText += "\n"; // Add a newline only if it's not the last line
