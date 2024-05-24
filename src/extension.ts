@@ -32,18 +32,41 @@ export function activate(context: vscode.ExtensionContext) {
   let removeCommentsDisposable = vscode.commands.registerCommand(
     "extension.removeCommentsOnCopy",
     async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showErrorMessage("No active editor");
+        return;
+      }
+
       if (!vscode.env.clipboard) {
         vscode.window.showErrorMessage("Clipboard not accessible");
         return;
       }
 
+      // Get the selected text
+      const selection = editor.selection;
+      let selectedText = editor.document.getText(selection);
+
+      // Write the selected text to the clipboard
+      await vscode.env.clipboard.writeText(selectedText);
+
+      // Read the text from the clipboard
       let clipboardText = await vscode.env.clipboard.readText();
+
+      // Remove comments and empty lines
       let commentRemovedText = clipboardText.replace(
         /(\/\*[\s\S]*?\*\/)|(\/\/.*)|(#.*)/g,
         ""
       );
-      await vscode.env.clipboard.writeText(commentRemovedText);
-      vscode.window.showInformationMessage("Comments removed from clipboard");
+      let noEmptyLinesText = commentRemovedText.replace(/^\s*[\r\n]/gm, "");
+
+      // Write the cleaned text back to the clipboard
+      await vscode.env.clipboard.writeText(noEmptyLinesText);
+
+      vscode.window.showInformationMessage(
+        "Comments and empty lines removed from clipboard"
+      );
     }
   );
 
