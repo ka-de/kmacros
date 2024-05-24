@@ -2,7 +2,11 @@
   "name": "kmacros",
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
-  "version": "0.0.6",
+  "publisher": "_ka_de",
+  "version": "0.0.7",
+  "permissions": [
+    "clipboard"
+  ],
   "engines": {
     "vscode": "^1.89.0"
   },
@@ -20,12 +24,21 @@
       {
         "command": "extension.createHuggingFaceLink",
         "title": "Create HuggingFace Link"
+      },
+      {
+        "command": "extension.removeCommentsOnCopy",
+        "title": "Remove Comments on Copy"
       }
     ],
     "keybindings": [
       {
         "command": "extension.createHuggingFaceLink",
         "key": "ctrl+alt+h",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "extension.removeCommentsOnCopy",
+        "key": "ctrl+c",
         "when": "editorTextFocus"
       }
     ]

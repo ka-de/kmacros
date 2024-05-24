@@ -29,7 +29,25 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposable);
+  let removeCommentsDisposable = vscode.commands.registerCommand(
+    "extension.removeCommentsOnCopy",
+    async () => {
+      if (!vscode.env.clipboard) {
+        vscode.window.showErrorMessage("Clipboard not accessible");
+        return;
+      }
+
+      let clipboardText = await vscode.env.clipboard.readText();
+      let commentRemovedText = clipboardText.replace(
+        /(\/\*[\s\S]*?\*\/)|(\/\/.*)|(#.*)/g,
+        ""
+      );
+      await vscode.env.clipboard.writeText(commentRemovedText);
+      vscode.window.showInformationMessage("Comments removed from clipboard");
+    }
+  );
+
+  context.subscriptions.push(disposable, removeCommentsDisposable);
 }
 
 export function deactivate() {}
