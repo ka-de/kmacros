@@ -64,9 +64,11 @@ export function activate(context: vscode.ExtensionContext) {
       // Write the cleaned text back to the clipboard
       await vscode.env.clipboard.writeText(noEmptyLinesText);
 
+      /*
       vscode.window.showInformationMessage(
         "Comments and empty lines removed from clipboard"
       );
+      */
     }
   );
 
