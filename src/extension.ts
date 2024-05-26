@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       // Remove comments and empty lines
       let commentRemovedText = clipboardText.replace(
-        /(\/\*[\s\S]*?\*\/)|(\/\/.*)|(#.*)/g,
+        /(\/\*[\s\S]*?\*\/)|(^\s*\/\/.*)|(^\s*#.*)/gm,
         ""
       );
       let noEmptyLinesText = commentRemovedText.replace(/^\s*[\r\n]/gm, "");
