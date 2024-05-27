@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
-    "extension.createHuggingFaceLink",
+    "kmacros.createHuggingFaceLink",
     async () => {
       const editor = vscode.window.activeTextEditor;
 
@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   let removeCommentsDisposable = vscode.commands.registerCommand(
-    "extension.removeCommentsOnCopy",
+    "kmacros.removeCommentsOnCopy",
     async () => {
       const editor = vscode.window.activeTextEditor;
 
@@ -44,6 +44,14 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
+      // Access the configuration
+      const config = vscode.workspace.getConfiguration("kmacros");
+      const removeCommentsInMarkdown = config.get("removeCommentsInMarkdown");
+      const removeWhitespaceInMarkdown = config.get(
+        "removeWhitespaceInMarkdown"
+      );
+      const showNotifications = config.get("showNotifications");
+
       // Get the selected text
       const selection = editor.selection;
       let selectedText = editor.document.getText(selection);
@@ -54,21 +62,48 @@ export function activate(context: vscode.ExtensionContext) {
       // Read the text from the clipboard
       let clipboardText = await vscode.env.clipboard.readText();
 
+      // Booleans to track if an action is completed.
+      let commentsRemoved = false;
+      let whitespaceRemoved = false;
+
       // Remove comments and empty lines
-      let commentRemovedText = clipboardText.replace(
-        /(\/\*[\s\S]*?\*\/)|(^\s*\/\/.*)|(^\s*#.*)/gm,
-        ""
-      );
-      let noEmptyLinesText = commentRemovedText.replace(/^\s*[\r\n]/gm, "");
+      if (
+        editor.document.languageId !== "markdown" ||
+        removeCommentsInMarkdown
+      ) {
+        clipboardText = clipboardText.replace(
+          /(\/\*[\s\S]*?\*\/)|(^\s*\/\/.*)|(^\s*#.*)/gm,
+          ""
+        );
+        commentsRemoved = true;
+      }
+
+      if (
+        editor.document.languageId !== "markdown" ||
+        removeWhitespaceInMarkdown
+      ) {
+        clipboardText = clipboardText.replace(/^\s*[\r\n]/gm, "");
+        whitespaceRemoved = true;
+      }
 
       // Write the cleaned text back to the clipboard
-      await vscode.env.clipboard.writeText(noEmptyLinesText);
+      await vscode.env.clipboard.writeText(clipboardText);
 
-      /*
-      vscode.window.showInformationMessage(
-        "Comments and empty lines removed from clipboard"
-      );
-      */
+      if (showNotifications) {
+        if (commentsRemoved && whitespaceRemoved) {
+          vscode.window.showInformationMessage(
+            "Comments and empty lines removed from clipboard."
+          );
+        } else if (commentsRemoved) {
+          vscode.window.showInformationMessage(
+            "Comments removed from clipboard."
+          );
+        } else if (whitespaceRemoved) {
+          vscode.window.showInformationMessage(
+            "Whitespace removed from clipboard"
+          );
+        }
+      }
     }
   );
 

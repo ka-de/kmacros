@@ -3,7 +3,7 @@
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
   "publisher": "_ka_de",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "permissions": [
     "clipboard"
   ],
@@ -18,26 +18,46 @@
     "url": "https://github.com/ka-de/kmacros"
   },
   "activationEvents": [],
-  "main": "./out/extension.js",
+  "main": "./out/kmacros.js",
   "contributes": {
+    "configuration": {
+      "title": "kmacros",
+      "properties": {
+        "kmacros.showNotifications": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show notifications from the extension."
+        },
+        "kmacros.removeCommentsInMarkdown": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove comments in Markdown files when copying to clipboard."
+        },
+        "kmacros.removeWhitespaceInMarkdown": {
+          "type": "boolean",
+          "default": false,
+          "description": "Remove whitespace in Markdown files when copying to clipboard."
+        }
+      }
+    },
     "commands": [
       {
-        "command": "extension.createHuggingFaceLink",
+        "command": "kmacros.createHuggingFaceLink",
         "title": "Create HuggingFace Link"
       },
       {
-        "command": "extension.removeCommentsOnCopy",
+        "command": "kmacros.removeCommentsOnCopy",
         "title": "Remove Comments on Copy"
       }
     ],
     "keybindings": [
       {
-        "command": "extension.createHuggingFaceLink",
+        "command": "kmacros.createHuggingFaceLink",
         "key": "ctrl+alt+h",
         "when": "editorTextFocus"
       },
       {
-        "command": "extension.removeCommentsOnCopy",
+        "command": "kmacros.removeCommentsOnCopy",
         "key": "ctrl+c",
         "when": "editorTextFocus"
       }
