@@ -72,7 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
         removeCommentsInMarkdown
       ) {
         clipboardText = clipboardText.replace(
-          /(^\s*\/\*[\s\S]*?\*\/)|(^\s*\/\/(?!.*\s*#derive\(|\s*#cfg\().*)|(^\s*#(?!derive\(|cfg\().*)/gm,
+          /(\/\/.*$)|(\/\*[\s\S]*?\*\/)/gm,
           ""
         );
         commentsRemoved = true;
