@@ -3,7 +3,7 @@
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
   "publisher": "_ka_de",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "permissions": [
     "clipboard"
   ],
