@@ -2,8 +2,9 @@
   "name": "kmacros",
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
+  "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "permissions": [
     "clipboard"
   ],
