@@ -139,80 +139,84 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable, inlineMacroArgsDisposable);
 
-function inlineMacroArgs(text: string): string {
-  const macroRegex =
-    /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\((["'])((?:(?!\2).|\\\2)*)\2\s*(?:,\s*(.*))?\)/;
-  const match = text.match(macroRegex);
+  function inlineMacroArgs(text: string): string {
+    const macroRegex =
+      /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\((["'])((?:(?!\2).|\\\2)*)\2\s*(?:,\s*(.*))?\)/;
+    const match = text.match(macroRegex);
 
-  if (!match) {
-    return text;
-  }
-
-  const [fullMatch, macroName, _, formatString, args] = match;
-  if (!args) {
-    return text;
-  }
-
-  const argList = args.split(",").map((arg) => arg.trim());
-  let newFormatString = formatString;
-  let unusedArgs: (string | undefined)[] = [...argList];
-
-  // Replace numbered placeholders
-  newFormatString = newFormatString.replace(
-    /\{(\d+)([^}]*)\}/g,
-    (match, index, specifier) => {
-      const arg = argList[parseInt(index)];
-      if (arg) {
-        unusedArgs[parseInt(index)] = undefined;
-        return `{${arg}${specifier}}`;
-      }
-      return match;
+    if (!match) {
+      return text;
     }
-  );
 
-  // Replace remaining placeholders
-  newFormatString = newFormatString.replace(
-    /\{([^}]*)\}/g,
-    (match, specifier) => {
-      const arg = unusedArgs.find((a) => a !== undefined);
-      if (arg) {
-        const index = unusedArgs.indexOf(arg);
-        unusedArgs[index] = undefined;
-        return `{${arg}${specifier}}`;
-      }
-      return match;
+    const [fullMatch, macroName, _, formatString, args] = match;
+    if (!args) {
+      return text;
     }
-  );
 
-  // Handle special cases
-  newFormatString = newFormatString
-    .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, '{$2$3}')
-    .replace(/\{(\w+)v:([^}]*)\}/g, '{$1:$2}')
-    .replace(/\{(\w+):1\$\}/g, (match, name) => {
-      const widthArg = unusedArgs.find(arg => arg !== undefined);
-      if (widthArg) {
-        unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
-        return `{${name}:${widthArg}$}`;
+    const argList = args.split(",").map((arg) => arg.trim());
+    let newFormatString = formatString;
+    let unusedArgs: (string | undefined)[] = [...argList];
+
+    // Replace numbered placeholders
+    newFormatString = newFormatString.replace(
+      /\{(\d+)([^}]*)\}/g,
+      (match, index, specifier) => {
+        const arg = argList[parseInt(index)];
+        if (arg) {
+          unusedArgs[parseInt(index)] = undefined;
+          return `{${arg}${specifier}}`;
+        }
+        return match;
       }
-      return match;
-    })
-    .replace(/\{(\w+):\.(\*)\}/g, (match, name) => {
-      const precArg = unusedArgs.find(arg => arg !== undefined);
-      if (precArg) {
-        unusedArgs[unusedArgs.indexOf(precArg)] = undefined;
-        return `{${name}:.${precArg}$}`;
+    );
+
+    // Replace remaining placeholders
+    newFormatString = newFormatString.replace(
+      /\{([^}]*)\}/g,
+      (match, specifier) => {
+        const arg = unusedArgs.find((a) => a !== undefined);
+        if (arg) {
+          const index = unusedArgs.indexOf(arg);
+          unusedArgs[index] = undefined;
+          return `{${arg}${specifier}}`;
+        }
+        return match;
       }
-      return match;
-    });
+    );
 
-  // Add remaining unused arguments
-  const remainingArgs = unusedArgs.filter(
-    (arg): arg is string => arg !== undefined
-  );
+    // Handle special cases
+    newFormatString = newFormatString
+      .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, "{$2$3}")
+      .replace(/\{(\w+)v:([^}]*)\}/g, "{$1:$2}")
+      .replace(/\{(\w+):1\$\}/g, (match, name) => {
+        const widthArg = unusedArgs.find(
+          (arg) => arg !== undefined && arg !== name
+        );
+        if (widthArg) {
+          unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
+          return `{${name}:${widthArg}$}`;
+        }
+        return match;
+      })
+      .replace(/\{(\w+):\.(\*)\}/g, (match, name) => {
+        const precArg = unusedArgs.find(
+          (arg) => arg !== undefined && arg !== name
+        );
+        if (precArg) {
+          unusedArgs[unusedArgs.indexOf(precArg)] = undefined;
+          return `{${name}:.${precArg}$}`;
+        }
+        return match;
+      });
 
-  return `${macroName}!("${newFormatString}"${
-    remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
-  })`;
+    // Add remaining unused arguments
+    const remainingArgs = unusedArgs.filter(
+      (arg): arg is string => arg !== undefined
+    );
+
+    return `${macroName}!("${newFormatString}"${
+      remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
+    })`;
   } // inlineMacroArgs
 } // activate
 
