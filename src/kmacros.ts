@@ -131,8 +131,13 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
       });
+
+      // Run document formatting
+      await vscode.commands.executeCommand("editor.action.formatDocument");
     }
   );
+
+  context.subscriptions.push(disposable, inlineMacroArgsDisposable);
 
   function inlineMacroArgs(text: string): string {
     const macroRegex =

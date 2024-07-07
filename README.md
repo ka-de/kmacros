@@ -1,3 +1,3 @@
-# kmacros README
+# kmacros
 
 **Enjoy!**
