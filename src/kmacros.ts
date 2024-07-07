@@ -184,6 +184,12 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
+    // Handle special cases
+    newFormatString = newFormatString
+      .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, "{$2$3}")
+      .replace(/\{(\w+):\.(\w+)\$\}/g, "{$1:.$2$}")
+      .replace(/\{(\w+):(\w+)\$\}/g, "{$1:$2$}");
+
     // Add remaining unused arguments
     const remainingArgs = unusedArgs.filter(
       (arg): arg is string => arg !== undefined
