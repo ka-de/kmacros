@@ -3,7 +3,7 @@
   "displayName": "kmacros",
   "description": "Handy little macros UwU",
   "publisher": "_ka_de",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "permissions": [
     "clipboard"
   ],
@@ -42,6 +42,10 @@
     },
     "commands": [
       {
+        "command": "kmacros.inlineMacroArgs",
+        "title": "Inline Rust Macro Arguments"
+      },
+      {
         "command": "kmacros.createHuggingFaceLink",
         "title": "Create HuggingFace Link"
       },
@@ -51,6 +55,12 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "kmacros.inlineMacroArgs",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorTextFocus"
+      },
       {
         "command": "kmacros.createHuggingFaceLink",
         "key": "ctrl+alt+h",

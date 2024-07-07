@@ -108,6 +108,86 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(disposable, removeCommentsDisposable);
+
+  let inlineMacroArgsDisposable = vscode.commands.registerCommand(
+    "kmacros.inlineMacroArgs",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showErrorMessage("No active editor");
+        return;
+      }
+
+      await editor.edit((editBuilder) => {
+        for (const selection of editor.selections) {
+          const line = editor.document.lineAt(selection.start.line);
+          const lineText = line.text;
+
+          const newText = inlineMacroArgs(lineText);
+
+          if (newText !== lineText) {
+            editBuilder.replace(line.range, newText);
+          }
+        }
+      });
+    }
+  );
+
+  function inlineMacroArgs(text: string): string {
+    const macroRegex =
+      /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\((["'])((?:(?!\2).|\\\2)*)\2\s*(?:,\s*(.*))?\)/;
+    const match = text.match(macroRegex);
+
+    if (!match) {
+      return text;
+    }
+
+    const [fullMatch, macroName, _, formatString, args] = match;
+    if (!args) {
+      return text;
+    }
+
+    const argList = args.split(",").map((arg) => arg.trim());
+    let newFormatString = formatString;
+    let unusedArgs: (string | undefined)[] = [...argList];
+
+    // Replace numbered placeholders
+    newFormatString = newFormatString.replace(
+      /\{(\d+)([^}]*)\}/g,
+      (match, index, specifier) => {
+        const arg = argList[parseInt(index)];
+        if (arg) {
+          unusedArgs[parseInt(index)] = undefined;
+          return `{${arg}${specifier}}`;
+        }
+        return match;
+      }
+    );
+
+    // Replace remaining placeholders
+    newFormatString = newFormatString.replace(
+      /\{([^}]*)\}/g,
+      (match, specifier) => {
+        const arg = unusedArgs.find((a) => a !== undefined);
+        if (arg) {
+          const index = unusedArgs.indexOf(arg);
+          unusedArgs[index] = undefined;
+          return `{${arg}${specifier}}`;
+        }
+        return match;
+      }
+    );
+
+    // Add remaining unused arguments
+    const remainingArgs = unusedArgs.filter(
+      (arg): arg is string => arg !== undefined
+    );
+
+    return `${macroName}!("${newFormatString}"${
+      remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
+    })`;
+  }
 }
 
 export function deactivate() {}
