@@ -170,6 +170,22 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
+    // Handle the {0:1$} case
+    newFormatString = newFormatString.replace(
+      /\{(\d+):1\$\}/g,
+      (match, index) => {
+        const arg = argList[parseInt(index)];
+        const widthArg = unusedArgs.find(
+          (a, i) => a !== undefined && i > parseInt(index)
+        );
+        if (arg && widthArg) {
+          unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
+          return `{${arg}:${widthArg}$}`;
+        }
+        return match;
+      }
+    );
+
     // Replace remaining placeholders
     newFormatString = newFormatString.replace(
       /\{([^}]*)\}/g,
@@ -188,16 +204,6 @@ export function activate(context: vscode.ExtensionContext) {
     newFormatString = newFormatString
       .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, "{$2$3}")
       .replace(/\{(\w+)v:([^}]*)\}/g, "{$1:$2}")
-      .replace(/\{(\w+):1\$\}/g, (match, name) => {
-        const widthArg = unusedArgs.find(
-          (arg) => arg !== undefined && arg !== name
-        );
-        if (widthArg) {
-          unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
-          return `{${name}:${widthArg}$}`;
-        }
-        return match;
-      })
       .replace(/\{(\w+):\.(\*)\}/g, (match, name) => {
         const precArg = unusedArgs.find(
           (arg) => arg !== undefined && arg !== name
