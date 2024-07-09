@@ -121,13 +121,21 @@ export function activate(context: vscode.ExtensionContext) {
 
       await editor.edit((editBuilder) => {
         for (const selection of editor.selections) {
-          const line = editor.document.lineAt(selection.start.line);
-          const lineText = line.text;
+          const startLine = selection.start.line;
+          const endLine = selection.end.line;
+          const selectedText = editor.document.getText(selection);
 
-          const newText = inlineMacroArgs(lineText);
+          const newText = inlineMacroArgs(selectedText);
 
-          if (newText !== lineText) {
-            editBuilder.replace(line.range, newText);
+          if (newText !== selectedText) {
+            const range = new vscode.Range(
+              new vscode.Position(startLine, 0),
+              new vscode.Position(
+                endLine,
+                editor.document.lineAt(endLine).text.length
+              )
+            );
+            editBuilder.replace(range, newText);
           }
         }
       });
@@ -141,14 +149,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   function inlineMacroArgs(text: string): string {
     const macroRegex =
-      /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\((["'])((?:(?!\2).|\\\2)*)\2\s*(?:,\s*(.*))?\)/;
+      /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["'])((?:(?!\2).|[\s\S])*?)\2\s*(?:,\s*([\s\S]*?))?\s*\)/;
     const match = text.match(macroRegex);
 
     if (!match) {
       return text;
     }
 
-    const [fullMatch, macroName, _, formatString, args] = match;
+    const [fullMatch, macroName, quote, formatString, args] = match;
     if (!args) {
       return text;
     }
@@ -220,9 +228,17 @@ export function activate(context: vscode.ExtensionContext) {
       (arg): arg is string => arg !== undefined
     );
 
-    return `${macroName}!("${newFormatString}"${
+    // Construct the new macro call, preserving multiline format if necessary
+    const newMacroCall = `${macroName}!(${quote}${newFormatString}${quote}${
       remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
     })`;
+
+    // If the original macro call was multiline, format the new one similarly
+    if (fullMatch.includes("\n")) {
+      return newMacroCall.replace(/\(/, "(\n    ").replace(/\)$/, "\n)");
+    }
+
+    return newMacroCall;
   } // inlineMacroArgs
 } // activate
 
