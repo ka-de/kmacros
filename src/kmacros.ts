@@ -120,23 +120,30 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       await editor.edit((editBuilder) => {
-        for (const selection of editor.selections) {
-          const startLine = selection.start.line;
-          const endLine = selection.end.line;
-          const selectedText = editor.document.getText(selection);
+        const document = editor.document;
+        const cursorPosition = editor.selection.active;
+        let startLine = cursorPosition.line;
+        let endLine = startLine;
 
-          const newText = inlineMacroArgs(selectedText);
-
-          if (newText !== selectedText) {
-            const range = new vscode.Range(
-              new vscode.Position(startLine, 0),
-              new vscode.Position(
-                endLine,
-                editor.document.lineAt(endLine).text.length
-              )
-            );
-            editBuilder.replace(range, newText);
+        // Find the ending line (line with `);`)
+        while (endLine < document.lineCount - 1) {
+          if (document.lineAt(endLine).text.trim().endsWith(");")) {
+            break;
           }
+          endLine++;
+        }
+
+        // Get the text of the range
+        const range = new vscode.Range(
+          new vscode.Position(startLine, 0),
+          new vscode.Position(endLine, document.lineAt(endLine).text.length)
+        );
+        const selectedText = document.getText(range);
+
+        const newText = inlineMacroArgs(selectedText);
+
+        if (newText !== selectedText) {
+          editBuilder.replace(range, newText);
         }
       });
 
