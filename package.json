@@ -4,7 +4,7 @@
   "description": "Handy little macros UwU",
   "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.35",
+  "version": "0.0.48",
   "permissions": [
     "clipboard"
   ],
@@ -43,6 +43,10 @@
     },
     "commands": [
       {
+        "command": "kmacros.selectAll",
+        "title": "Select All Text in File"
+      },
+      {
         "command": "kmacros.inlineMacroArgs",
         "title": "Inline Rust Macro Arguments"
       },
@@ -56,6 +60,12 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "kmacros.selectAll",
+        "key": "ctrl+alt+a",
+        "mac": "cmd+alt+a",
+        "when": "editorTextFocus"
+      },
       {
         "command": "kmacros.inlineMacroArgs",
         "key": "ctrl+alt+i",

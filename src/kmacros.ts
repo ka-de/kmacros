@@ -29,6 +29,21 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  let selectAllDisposable = vscode.commands.registerCommand(
+    "kmacros.selectAll",
+    () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        const lastLine = editor.document.lineCount - 1;
+        const lastLineLength = editor.document.lineAt(lastLine).text.length;
+        const selection = new vscode.Selection(0, 0, lastLine, lastLineLength);
+        editor.selection = selection;
+      }
+    }
+  );
+
+  context.subscriptions.push(selectAllDisposable);
+
   let removeCommentsDisposable = vscode.commands.registerCommand(
     "kmacros.removeCommentsOnCopy",
     async () => {
@@ -155,34 +170,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable, inlineMacroArgsDisposable);
 
   function inlineMacroArgs(text: string): string {
-    /**
-     * Regular expression to match Rust macro invocations in a string.
-     *
-     * This regular expression is designed to match the syntax of Rust macro invocations,
-     * specifically for the following macros: format, print, println, eprint, eprintln,
-     * write, writeln, format_args, panic, unreachable, todo, assert, assert_eq,
-     * debug_assert, and debug_assert_eq.
-     *
-     * The regular expression has several capture groups:
-     * 1. The entire macro invocation (e.g., `println!("Hello, {}!", name)`).
-     * 2. Any characters before the macro name.
-     * 3. The macro name itself.
-     * 4. The opening quote of the format string (either a single or double quote).
-     * 5. The format string inside the quotes.
-     * 6. Any arguments after the format string, if present.
-     *
-     * Here's a breakdown of the regular expression:
-     * - ((.*?)(format|print|...|debug_assert_eq)!\s*\(\s*(["'])): Matches the start of a macro
-     *    invocation, capturing any characters before the macro name, the macro name itself,
-     *    and the opening quote of the format string.
-     * - ((?:(?!\4).|[\s\S])*?)\4: Matches the format string inside the quotes, but does not
-     *    include the quotes themselves. The format string can include any characters except the
-     *    closing quote, and can span multiple lines.
-     * - \s*(?:,\s*([\s\S]*?))?\s*\): Matches any arguments after the format string, if present,
-     *    and the closing parenthesis of the macro invocation.
-     */
     const macroRegex =
-      /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)/;
+      /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)([^)]*)/;
     const match = text.match(macroRegex);
 
     if (!match) {
@@ -196,8 +185,12 @@ export function activate(context: vscode.ExtensionContext) {
       macroName,
       quote,
       formatString,
-      args
+      args,
+      suffix
     ] = match;
+    if (!args) {
+      return text;
+    }
 
     if (!args) {
       return text;
@@ -281,11 +274,13 @@ export function activate(context: vscode.ExtensionContext) {
     // Construct the new macro call, preserving multiline format if necessary
     const newMacroCall = `${prefix}${newFormatString}${quote}${
       remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
-    })`;
+    })${suffix}`;
 
     // If the original macro call was multiline, format the new one similarly
     if (fullMatch.includes("\n")) {
-      return newMacroCall.replace(/\(/, "(\n    ").replace(/\)$/, "\n)");
+      return newMacroCall
+        .replace(/\(/, "(\n    ")
+        .replace(/\)([^)]*)$/, "\n)$1");
     }
 
     return newMacroCall;
