@@ -4,7 +4,7 @@
   "description": "Handy little macros UwU",
   "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.73",
+  "version": "0.0.80",
   "permissions": [
     "clipboard"
   ],
@@ -43,8 +43,8 @@
     },
     "commands": [
       {
-        "command": "kmacros.calculate",
-        "title": "Calculate Selected Expression"
+        "command": "kmacros.hotdog",
+        "title": "Calculate Selected Expression or Flip Booleans"
       },
       {
         "command": "kmacros.selectAll",
@@ -65,7 +65,7 @@
     ],
     "keybindings": [
       {
-        "command": "kmacros.calculate",
+        "command": "kmacros.hotdog",
         "key": "alt+0",
         "when": "editorTextFocus"
       },

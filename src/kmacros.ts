@@ -40,9 +40,12 @@ export function activate(context: vscode.ExtensionContext) {
    * Or.. if you are a game developer, you can also do silly stuff
    * like `Math.PI*2` and it will output: 6.283185307179586
    * Or.. `Math.cos(0.5)` and it will output: 0.8775825618903728
+   * 
+   * You can also flip booleans case sensitively, try it out!
+   * This false is true, and this True is False.
    */
-  let calculateDisposable = vscode.commands.registerCommand(
-    "kmacros.calculate",
+  let hotdogDisposable = vscode.commands.registerCommand(
+    "kmacros.hotdog",
     () => {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
@@ -50,11 +53,23 @@ export function activate(context: vscode.ExtensionContext) {
         const text = editor.document.getText(selection);
 
         try {
-          // Use eval() to calculate the result
-          // Note: eval() can be dangerous if used with untrusted input
-          const result = eval(text);
+          let result;
+          // Flip booleans if the text is a boolean value
+          if (text === "true") {
+            result = "false";
+          } else if (text === "false") {
+            result = "true";
+          } else if (text === "True") {
+            result = "False";
+          } else if (text === "False") {
+            result = "True";
+          } else {
+            // Use eval() to calculate the result
+            // Note: eval() can be dangerous if used with untrusted input
+            result = eval(text);
+          }
 
-          // Replace the selection with the calculated result
+          // Replace the selection with the calculated result or flipped boolean
           editor.edit((editBuilder) => {
             editBuilder.replace(selection, result.toString());
           });
@@ -71,7 +86,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(calculateDisposable);
+  context.subscriptions.push(hotdogDisposable);
 
   let selectAllDisposable = vscode.commands.registerCommand(
     "kmacros.selectAll",
