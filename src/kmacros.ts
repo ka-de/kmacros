@@ -155,15 +155,50 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable, inlineMacroArgsDisposable);
 
   function inlineMacroArgs(text: string): string {
+    /**
+     * Regular expression to match Rust macro invocations in a string.
+     *
+     * This regular expression is designed to match the syntax of Rust macro invocations,
+     * specifically for the following macros: format, print, println, eprint, eprintln,
+     * write, writeln, format_args, panic, unreachable, todo, assert, assert_eq,
+     * debug_assert, and debug_assert_eq.
+     *
+     * The regular expression has several capture groups:
+     * 1. The entire macro invocation (e.g., `println!("Hello, {}!", name)`).
+     * 2. Any characters before the macro name.
+     * 3. The macro name itself.
+     * 4. The opening quote of the format string (either a single or double quote).
+     * 5. The format string inside the quotes.
+     * 6. Any arguments after the format string, if present.
+     *
+     * Here's a breakdown of the regular expression:
+     * - ((.*?)(format|print|...|debug_assert_eq)!\s*\(\s*(["'])): Matches the start of a macro
+     *    invocation, capturing any characters before the macro name, the macro name itself,
+     *    and the opening quote of the format string.
+     * - ((?:(?!\4).|[\s\S])*?)\4: Matches the format string inside the quotes, but does not
+     *    include the quotes themselves. The format string can include any characters except the
+     *    closing quote, and can span multiple lines.
+     * - \s*(?:,\s*([\s\S]*?))?\s*\): Matches any arguments after the format string, if present,
+     *    and the closing parenthesis of the macro invocation.
+     */
     const macroRegex =
-      /(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["'])((?:(?!\2).|[\s\S])*?)\2\s*(?:,\s*([\s\S]*?))?\s*\)/;
+      /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)/;
     const match = text.match(macroRegex);
 
     if (!match) {
       return text;
     }
 
-    const [fullMatch, macroName, quote, formatString, args] = match;
+    const [
+      fullMatch,
+      prefix,
+      beforeMacro,
+      macroName,
+      quote,
+      formatString,
+      args
+    ] = match;
+
     if (!args) {
       return text;
     }
@@ -177,10 +212,12 @@ export function activate(context: vscode.ExtensionContext) {
       /\{(\d+)([^}]*)\}/g,
       (match, index, specifier) => {
         const arg = argList[parseInt(index)];
+
         if (arg) {
           unusedArgs[parseInt(index)] = undefined;
           return `{${arg}${specifier}}`;
         }
+
         return match;
       }
     );
@@ -193,10 +230,12 @@ export function activate(context: vscode.ExtensionContext) {
         const widthArg = unusedArgs.find(
           (a, i) => a !== undefined && i > parseInt(index)
         );
+
         if (arg && widthArg) {
           unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
           return `{${arg}:${widthArg}$}`;
         }
+
         return match;
       }
     );
@@ -206,11 +245,13 @@ export function activate(context: vscode.ExtensionContext) {
       /\{([^}]*)\}/g,
       (match, specifier) => {
         const arg = unusedArgs.find((a) => a !== undefined);
+
         if (arg) {
           const index = unusedArgs.indexOf(arg);
           unusedArgs[index] = undefined;
           return `{${arg}${specifier}}`;
         }
+
         return match;
       }
     );
@@ -220,13 +261,15 @@ export function activate(context: vscode.ExtensionContext) {
       .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, "{$2$3}")
       .replace(/\{(\w+)v:([^}]*)\}/g, "{$1:$2}")
       .replace(/\{(\w+):\.(\*)\}/g, (match, name) => {
-        const precArg = unusedArgs.find(
+        const precisionArg = unusedArgs.find(
           (arg) => arg !== undefined && arg !== name
         );
-        if (precArg) {
-          unusedArgs[unusedArgs.indexOf(precArg)] = undefined;
-          return `{${name}:.${precArg}$}`;
+
+        if (precisionArg) {
+          unusedArgs[unusedArgs.indexOf(precisionArg)] = undefined;
+          return `{${name}:.${precisionArg}$}`;
         }
+
         return match;
       });
 
@@ -236,7 +279,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Construct the new macro call, preserving multiline format if necessary
-    const newMacroCall = `${macroName}!(${quote}${newFormatString}${quote}${
+    const newMacroCall = `${prefix}${newFormatString}${quote}${
       remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
     })`;
 
