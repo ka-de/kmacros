@@ -32,7 +32,9 @@ export function activate(context: vscode.ExtensionContext) {
   /**
    * `hotdogDisposable` is a cooler function than it sounds!
    * It can either run an eval on an expression you have selected,
-   * or flip boolean values.
+   * or flip boolean values and it can try to guess the context
+   * from the contents of the current line if you don't have anything
+   * selected.
    *
    * Try it out by selecting this: Math.sin(0.5);
    * and pressing Alt + 0.
@@ -53,24 +55,55 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
-        const selection = editor.selection;
-        const text = editor.document.getText(selection);
+        let selection = editor.selection;
+        let text = editor.document.getText(selection);
+
+        // If no text is selected, get the text of the current line
+        if (text === "") {
+          const line = editor.document.lineAt(selection.start.line);
+          text = line.text.trim();
+          // Create a new Selection object from the Range
+          selection = new vscode.Selection(line.range.start, line.range.end);
+        }
 
         try {
           let result;
-          // Flip booleans if the text is a boolean value
-          if (text === "true") {
-            result = "false";
-          } else if (text === "false") {
-            result = "true";
-          } else if (text === "True") {
-            result = "False";
-          } else if (text === "False") {
-            result = "True";
+          // Check if the text contains `= "`
+          if (text.includes('= "')) {
+            // Extract the expression from `= "` until `"`
+            let expression = text.split('= "')[1].split('"')[0];
+            result = eval(expression);
+          } else if (text.includes(': "')) {
+              let expression = text.split(': "')[1].split('"')[0];
+              result = eval(expression);
+          } else if (text.includes("=")) {
+            // Extract the expression after `=`
+            let expression = text.split("=")[1].trim();
+            result = eval(expression);
+          } else if (text.includes(":")) {
+            let expression = text.split(":")[1].trim();
+            result = eval(expression);
           } else {
-            // Use eval() to calculate the result
-            // Note: eval() can be dangerous if used with untrusted input
-            result = eval(text);
+            // Handle other cases as before
+            if (text === "true") {
+              result = "false";
+            } else if (text === "false") {
+              result = "true";
+            } else if (text === "True") {
+              result = "False";
+            } else if (text === "False") {
+              result = "True";
+            } else if (text.includes("True")) {
+              result = text.replace("True", "False");
+            } else if (text.includes("False")) {
+              result = text.replace("False", "True");
+            } else if (text.includes("true")) {
+              result = text.replace("true", "false");
+            } else if (text.includes("false")) {
+              result = text.replace("false", "true");
+            } else {
+              result = eval(text);
+            }
           }
 
           // Replace the selection with the calculated result or flipped boolean
