@@ -4,7 +4,7 @@
   "description": "Handy little macros UwU",
   "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.48",
+  "version": "0.0.67",
   "permissions": [
     "clipboard"
   ],
@@ -43,6 +43,10 @@
     },
     "commands": [
       {
+        "command": "kmacros.calculate",
+        "title": "Calculate Selected Expression"
+      },
+      {
         "command": "kmacros.selectAll",
         "title": "Select All Text in File"
       },
@@ -60,6 +64,11 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "kmacros.calculate",
+        "key": "alt+0",
+        "when": "editorTextFocus"
+      },
       {
         "command": "kmacros.selectAll",
         "key": "ctrl+alt+a",

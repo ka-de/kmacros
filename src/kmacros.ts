@@ -29,6 +29,50 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  /**
+   * Try it out by selecting this: Math.sin(0.5);
+   * and pressing Alt + 0.
+   * It will output: 0.479425538604203
+   *
+   * You can also eval this one: eval("Math.sin(0.5)*6*5");
+   * and it will output this:    14.38276615812609
+   *
+   * Or.. if you are a game developer, you can also do silly stuff
+   * like `Math.PI*2` and it will output: 6.283185307179586
+   * Or.. `Math.cos(0.5)` and it will output: 0.8775825618903728
+   */
+  let calculateDisposable = vscode.commands.registerCommand(
+    "kmacros.calculate",
+    () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        const selection = editor.selection;
+        const text = editor.document.getText(selection);
+
+        try {
+          // Use eval() to calculate the result
+          // Note: eval() can be dangerous if used with untrusted input
+          const result = eval(text);
+
+          // Replace the selection with the calculated result
+          editor.edit((editBuilder) => {
+            editBuilder.replace(selection, result.toString());
+          });
+        } catch (error) {
+          let errorMessage = "An error occurred during calculation";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          } else if (typeof error === "string") {
+            errorMessage = error;
+          }
+          vscode.window.showErrorMessage(`Invalid expression: ${errorMessage}`);
+        }
+      }
+    }
+  );
+
+  context.subscriptions.push(calculateDisposable);
+
   let selectAllDisposable = vscode.commands.registerCommand(
     "kmacros.selectAll",
     () => {
