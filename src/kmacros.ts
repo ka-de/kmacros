@@ -215,7 +215,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function inlineMacroArgs(text: string): string {
     const macroRegex =
-      /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)([^)]*)/;
+      /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)(.*)$/;
     const match = text.match(macroRegex);
 
     if (!match) {
@@ -232,10 +232,6 @@ export function activate(context: vscode.ExtensionContext) {
       args,
       suffix
     ] = match;
-    if (!args) {
-      return text;
-    }
-
     if (!args) {
       return text;
     }
@@ -322,9 +318,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // If the original macro call was multiline, format the new one similarly
     if (fullMatch.includes("\n")) {
-      return newMacroCall
-        .replace(/\(/, "(\n    ")
-        .replace(/\)([^)]*)$/, "\n)$1");
+      return newMacroCall.replace(/\(/, "(\n    ").replace(/\)(?=.*)/, "\n)");
     }
 
     return newMacroCall;
