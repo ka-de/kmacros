@@ -1,10 +1,10 @@
 {
   "name": "kmacros",
   "displayName": "kmacros",
-  "description": "Handy little macros UwU",
+  "description": "A set of macros, keybindings, and commands for Visual Studio Code for the true rubicon of laziness.",
   "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.91",
+  "version": "0.0.93",
   "permissions": [
     "clipboard"
   ],

@@ -57,58 +57,64 @@ export function activate(context: vscode.ExtensionContext) {
       if (editor) {
         let selection = editor.selection;
         let text = editor.document.getText(selection);
+        let fullLineText = "";
+        let matchStart = 0;
+        let matchEnd = 0;
 
         // If no text is selected, get the text of the current line
         if (text === "") {
           const line = editor.document.lineAt(selection.start.line);
-          text = line.text.trim();
-          // Create a new Selection object from the Range
+          fullLineText = line.text;
+          text = fullLineText.trim();
           selection = new vscode.Selection(line.range.start, line.range.end);
         }
 
         try {
           let result;
-          // Check if the text contains `= "`
-          if (text.includes('= "')) {
-            // Extract the expression from `= "` until `"`
-            let expression = text.split('= "')[1].split('"')[0];
-            result = eval(expression);
-          } else if (text.includes(': "')) {
-              let expression = text.split(': "')[1].split('"')[0];
-              result = eval(expression);
-          } else if (text.includes("=")) {
-            // Extract the expression after `=`
-            let expression = text.split("=")[1].trim();
-            result = eval(expression);
-          } else if (text.includes(":")) {
-            let expression = text.split(":")[1].trim();
-            result = eval(expression);
-          } else {
-            // Handle other cases as before
-            if (text === "true") {
-              result = "false";
-            } else if (text === "false") {
-              result = "true";
-            } else if (text === "True") {
-              result = "False";
-            } else if (text === "False") {
-              result = "True";
-            } else if (text.includes("True")) {
-              result = text.replace("True", "False");
-            } else if (text.includes("False")) {
-              result = text.replace("False", "True");
-            } else if (text.includes("true")) {
-              result = text.replace("true", "false");
-            } else if (text.includes("false")) {
-              result = text.replace("false", "true");
+          let expression;
+          if (fullLineText) {
+            // Match a wider range of JavaScript expressions
+            const match = fullLineText.match(/:\s*(.+?);/);
+            if (match) {
+              expression = match[1].trim();
+              matchStart = fullLineText.indexOf(expression);
+              matchEnd = matchStart + expression.length;
             } else {
-              result = eval(text);
+              throw new Error("No valid expression found in the line");
             }
+          } else {
+            expression = text;
           }
 
-          // Replace the selection with the calculated result or flipped boolean
+          // Handle boolean flipping
+          if (expression === "true") {
+            result = "false";
+          } else if (expression === "false") {
+            result = "true";
+          } else if (expression === "True") {
+            result = "False";
+          } else if (expression === "False") {
+            result = "True";
+          } else {
+            // Evaluate the expression
+            result = eval(expression);
+          }
+
+          // Replace only the matched expression or the selection
           editor.edit((editBuilder) => {
-            editBuilder.replace(selection, result.toString());
+            if (fullLineText) {
+              const start = new vscode.Position(
+                selection.start.line,
+                matchStart
+              );
+              const end = new vscode.Position(selection.start.line, matchEnd);
+              editBuilder.replace(
+                new vscode.Range(start, end),
+                result.toString()
+              );
+            } else {
+              editBuilder.replace(selection, result.toString());
+            }
           });
         } catch (error) {
           let errorMessage = "An error occurred during calculation";
