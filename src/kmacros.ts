@@ -36,12 +36,12 @@ export function activate(context: vscode.ExtensionContext) {
    * from the contents of the current line if you don't have anything
    * selected.
    *
-   * Try it out by selecting this: Math.sin(0.5);
+   * Try it out by selecting this: Math.cos(0.5);
    * and pressing Alt + 0.
    * It will output: 0.479425538604203
    *
-   * You can also eval this one: eval("Math.sin(0.5)*6*5");
-   * and it will output this:    14.38276615812609
+   * You can also eval this one: eval(Math.sin(0.5));
+   * and it will output this:    0.479425538604203
    *
    * Or.. if you are a game developer, you can also do silly stuff
    * like `Math.PI*2` and it will output: 6.283185307179586
@@ -58,8 +58,6 @@ export function activate(context: vscode.ExtensionContext) {
         let selection = editor.selection;
         let text = editor.document.getText(selection);
         let fullLineText = "";
-        let matchStart = 0;
-        let matchEnd = 0;
 
         // If no text is selected, get the text of the current line
         if (text === "") {
@@ -70,37 +68,46 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         try {
-          let result;
-          let expression;
-          if (fullLineText) {
-            // Match a wider range of JavaScript expressions
-            const match = fullLineText.match(/:\s*(.+?);/);
-            if (match) {
-              expression = match[1].trim();
-              matchStart = fullLineText.indexOf(expression);
-              matchEnd = matchStart + expression.length;
-            } else {
-              throw new Error("No valid expression found in the line");
-            }
-          } else {
-            expression = text;
-          }
+          let result: string | number;
+          let matchStart = 0;
+          let matchEnd = 0;
+          let expression: string;
 
-          // Handle boolean flipping
-          if (expression === "true") {
-            result = "false";
-          } else if (expression === "false") {
-            result = "true";
-          } else if (expression === "True") {
-            result = "False";
-          } else if (expression === "False") {
-            result = "True";
-          } else {
-            // Evaluate the expression
+          // Function to flip boolean values
+          const flipBoolean = (value: string): string => {
+            const lowerValue = value.toLowerCase();
+            return lowerValue === "true"
+              ? "false"
+              : lowerValue === "false"
+              ? "true"
+              : value;
+          };
+
+          // Check for delimited expressions first
+          const delimiterMatch = fullLineText.match(/:\s*(.+?);/);
+          if (delimiterMatch) {
+            expression = delimiterMatch[1].trim();
+            matchStart = fullLineText.indexOf(expression);
+            matchEnd = matchStart + expression.length;
             result = eval(expression);
+          } else {
+            // Check for embedded booleans
+            const booleanMatch = fullLineText.match(
+              /\b(true|false|True|False)\b/
+            );
+            if (booleanMatch) {
+              expression = booleanMatch[1];
+              matchStart = booleanMatch.index ?? 0; // Use 0 as a fallback if index is undefined
+              matchEnd = matchStart + expression.length;
+              result = flipBoolean(expression);
+            } else {
+              throw new Error(
+                "No valid expression or boolean found in the line"
+              );
+            }
           }
 
-          // Replace only the matched expression or the selection
+          // Replace only the matched expression or boolean
           editor.edit((editBuilder) => {
             if (fullLineText) {
               const start = new vscode.Position(

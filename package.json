@@ -4,7 +4,7 @@
   "description": "A set of macros, keybindings, and commands for Visual Studio Code for the true rubicon of laziness.",
   "icon": "images/icon.png",
   "publisher": "_ka_de",
-  "version": "0.0.93",
+  "version": "0.0.94",
   "permissions": [
     "clipboard"
   ],
