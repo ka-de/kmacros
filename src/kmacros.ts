@@ -30,6 +30,10 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   /**
+   * `hotdogDisposable` is a cooler function than it sounds!
+   * It can either run an eval on an expression you have selected,
+   * or flip boolean values.
+   *
    * Try it out by selecting this: Math.sin(0.5);
    * and pressing Alt + 0.
    * It will output: 0.479425538604203
@@ -40,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
    * Or.. if you are a game developer, you can also do silly stuff
    * like `Math.PI*2` and it will output: 6.283185307179586
    * Or.. `Math.cos(0.5)` and it will output: 0.8775825618903728
-   * 
+   *
    * You can also flip booleans case sensitively, try it out!
    * This false is true, and this True is False.
    */
