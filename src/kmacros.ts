@@ -233,21 +233,60 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable, removeCommentsDisposable);
 
-  /**
-   * Inlines macro arguments in a given text string.
-   * This function processes Rust-style macro calls and attempts to inline their arguments.
-   *
-   * @param text - The input text containing the macro call.
-   * @returns The processed text with inlined macro arguments.
-   */
+  let inlineMacroArgsDisposable = vscode.commands.registerCommand(
+    "kmacros.inlineMacroArgs",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        vscode.window.showErrorMessage("No active editor");
+        return;
+      }
+
+      await editor.edit((editBuilder) => {
+        const document = editor.document;
+        const cursorPosition = editor.selection.active;
+        let startLine = cursorPosition.line;
+        let endLine = startLine;
+
+        // Find the ending line (line with `);`)
+        while (endLine < document.lineCount - 1) {
+          if (document.lineAt(endLine).text.trim().endsWith(");")) {
+            break;
+          }
+          endLine++;
+        }
+
+        // Get the text of the range
+        const range = new vscode.Range(
+          new vscode.Position(startLine, 0),
+          new vscode.Position(endLine, document.lineAt(endLine).text.length)
+        );
+        const selectedText = document.getText(range);
+
+        const newText = inlineMacroArgs(selectedText);
+
+        if (newText !== selectedText) {
+          editBuilder.replace(range, newText);
+        }
+      });
+
+      // Run document formatting
+      await vscode.commands.executeCommand("editor.action.formatDocument");
+    }
+  );
+
+  context.subscriptions.push(disposable, inlineMacroArgsDisposable);
+
   function inlineMacroArgs(text: string): string {
-    // Regular expression to match Rust-style macro calls
     const macroRegex =
       /((.*?)(format|print|println|eprint|eprintln|write|writeln|format_args|panic|unreachable|todo|assert|assert_eq|debug_assert|debug_assert_eq)!\s*\(\s*(["']))((?:(?!\4).|[\s\S])*?)\4\s*(?:,\s*([\s\S]*?))?\s*\)(.*)$/;
     const match = text.match(macroRegex);
+
     if (!match) {
-      return text; // Return original text if no macro call is found
+      return text;
     }
+
     const [
       fullMatch,
       prefix,
@@ -259,134 +298,95 @@ export function activate(context: vscode.ExtensionContext) {
       suffix
     ] = match;
     if (!args) {
-      return text; // Return original text if no arguments are found
+      return text;
     }
 
-    // Split arguments, preserving parentheses and brackets
-    const argList = splitArgsPreservingBrackets(args);
+    const argList = args.split(",").map((arg) => arg.trim());
     let newFormatString = formatString;
     let unusedArgs: (string | undefined)[] = [...argList];
 
-    // Replace numbered placeholders with corresponding arguments
+    // Replace numbered placeholders
     newFormatString = newFormatString.replace(
       /\{(\d+)([^}]*)\}/g,
       (match, index, specifier) => {
         const arg = argList[parseInt(index)];
-        if (arg && !containsBrackets(arg)) {
+
+        if (arg) {
           unusedArgs[parseInt(index)] = undefined;
           return `{${arg}${specifier}}`;
         }
+
         return match;
       }
     );
 
-    // Handle width specifiers
+    // Handle the {0:1$} case
     newFormatString = newFormatString.replace(
       /\{(\d+):1\$\}/g,
       (match, index) => {
         const arg = argList[parseInt(index)];
         const widthArg = unusedArgs.find(
-          (a, i) =>
-            a !== undefined && i > parseInt(index) && !containsBrackets(a!)
+          (a, i) => a !== undefined && i > parseInt(index)
         );
-        if (arg && widthArg && !containsBrackets(arg)) {
+
+        if (arg && widthArg) {
           unusedArgs[unusedArgs.indexOf(widthArg)] = undefined;
           return `{${arg}:${widthArg}$}`;
         }
+
         return match;
       }
     );
 
-    // Replace remaining placeholders with unused arguments
+    // Replace remaining placeholders
     newFormatString = newFormatString.replace(
       /\{([^}]*)\}/g,
       (match, specifier) => {
-        const arg = unusedArgs.find(
-          (a) => a !== undefined && !containsBrackets(a!)
-        );
+        const arg = unusedArgs.find((a) => a !== undefined);
+
         if (arg) {
           const index = unusedArgs.indexOf(arg);
           unusedArgs[index] = undefined;
           return `{${arg}${specifier}}`;
         }
+
         return match;
       }
     );
 
-    // Additional formatting replacements
+    // Handle special cases
     newFormatString = newFormatString
       .replace(/\{(\w+)\s*=\s*(\w+)(:[^}]*)\}/g, "{$2$3}")
       .replace(/\{(\w+)v:([^}]*)\}/g, "{$1:$2}")
       .replace(/\{(\w+):\.(\*)\}/g, (match, name) => {
         const precisionArg = unusedArgs.find(
-          (arg) => arg !== undefined && arg !== name && !containsBrackets(arg!)
+          (arg) => arg !== undefined && arg !== name
         );
+
         if (precisionArg) {
           unusedArgs[unusedArgs.indexOf(precisionArg)] = undefined;
           return `{${name}:.${precisionArg}$}`;
         }
+
         return match;
       });
 
-    // Collect remaining unused arguments
+    // Add remaining unused arguments
     const remainingArgs = unusedArgs.filter(
       (arg): arg is string => arg !== undefined
     );
 
-    // Construct the new macro call
+    // Construct the new macro call, preserving multiline format if necessary
     const newMacroCall = `${prefix}${newFormatString}${quote}${
       remainingArgs.length ? ", " + remainingArgs.join(", ") : ""
     })${suffix}`;
 
-    // Format multi-line macro calls
+    // If the original macro call was multiline, format the new one similarly
     if (fullMatch.includes("\n")) {
       return newMacroCall.replace(/\(/, "(\n    ").replace(/\)(?=.*)/, "\n)");
     }
+
     return newMacroCall;
-  }
-
-  /**
-   * Checks if a string contains parentheses or square brackets.
-   *
-   * @param str - The string to check.
-   * @returns True if the string contains parentheses or square brackets, false otherwise.
-   */
-  function containsBrackets(str: string): boolean {
-    return /[\(\)\[\]]/.test(str);
-  }
-
-  /**
-   * Splits a string of arguments into an array, preserving parentheses and brackets.
-   *
-   * @param args - The string of arguments to split.
-   * @returns An array of individual arguments.
-   */
-  function splitArgsPreservingBrackets(args: string): string[] {
-    const result: string[] = [];
-    let currentArg = "";
-    let depth = 0;
-
-    for (let i = 0; i < args.length; i++) {
-      const char = args[i];
-      if (char === "(" || char === "[") {
-        depth++;
-      } else if (char === ")" || char === "]") {
-        depth--;
-      }
-
-      if (char === "," && depth === 0) {
-        result.push(currentArg.trim());
-        currentArg = "";
-      } else {
-        currentArg += char;
-      }
-    }
-
-    if (currentArg.trim()) {
-      result.push(currentArg.trim());
-    }
-
-    return result;
   } // inlineMacroArgs
 } // activate
 

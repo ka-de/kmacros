@@ -3,8 +3,9 @@
   "displayName": "kmacros",
   "description": "A set of macros, keybindings, and commands for Visual Studio Code for the true rubicon of laziness.",
   "icon": "images/icon.png",
-  "publisher": "_ka_de",
-  "version": "0.0.96",
+  "publisher": "undefined_publisher",
+  "license": "MIT",
+  "version": "0.0.99",
   "permissions": [
     "clipboard"
   ],
