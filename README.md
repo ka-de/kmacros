@@ -47,7 +47,7 @@ Selects all text in the current file and then copies it to the clipboard.
 
 **Note:** This command is very handy for programmers using Large Language Models!
 
-![An image of the select all command](https://cringe.live/images/selectall-copy.gif)
+![An image of the select all command](https://cringe.live/images/kmacros/selectall-copy.gif)
 
 ### 5. Inline Rust Macro Arguments
 
