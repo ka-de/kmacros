@@ -5,7 +5,7 @@
   "icon": "images/icon.png",
   "publisher": "kmacros",
   "license": "MIT",
-  "version": "0.0.102",
+  "version": "0.0.129",
   "permissions": [
     "clipboard"
   ],
@@ -75,12 +75,12 @@
     "keybindings": [
       {
         "command": "kmacros.cloneHtmlElementWithoutIncrement",
-        "key": "ctrl+]",
+        "key": "ctrl+alt+]",
         "when": "editorTextFocus"
       },
       {
         "command": "kmacros.cloneHtmlElement",
-        "key": "ctrl+[",
+        "key": "ctrl+alt+[",
         "when": "editorTextFocus"
       },
       {

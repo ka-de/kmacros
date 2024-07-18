@@ -8,23 +8,23 @@
 
 ### 1. HTMLClone
 
-**Shortcut:** `Ctrl + ]`
+**Shortcut:** `Ctrl + Alt + ]`
 
 This command clones the HTML element at the current cursor position.
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_clone_without_increment.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/htmlclone_without_increment.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
 ### 2. HTMLClone With Increment
 
-**Shortcut:** `Ctrl + [`
+**Shortcut:** `Ctrl + Alt + [`
 
 Similar to the previous command, this clones the HTML element at the cursor position but also increments any numbers found within the element.
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_clone_with_increment.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/htmlclone_with_increment.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -43,8 +43,8 @@ Examples:
 - Selecting `Math.cos(0.5)` and using the shortcut will output `0.8775825618903728`
 - Flipping `true` to `false` or `True` to `False` (case-sensitive)
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_hotdog.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/hotdog-disposable.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -56,8 +56,8 @@ Selects all text in the current file and then copies it to the clipboard.
 
 **Note:** This command is very handy for programmers using Large Language Models!
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_select_all.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/selectall-copy.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -67,8 +67,8 @@ Selects all text in the current file and then copies it to the clipboard.
 
 This command inlines arguments in Rust macros, making them more readable and concise.
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_inline_macro_args.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/inline-arguments.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -78,8 +78,8 @@ This command inlines arguments in Rust macros, making them more readable and con
 
 Generates a HuggingFace download link for the selected text, formatting it as a Markdown link.
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_huggingface_link.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/hf-link.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -89,8 +89,8 @@ Generates a HuggingFace download link for the selected text, formatting it as a 
 
 This command overrides the default copy behavior. When copying text, it removes comments and can optionally remove whitespace, even in Markdown files (configurable).
 
-<video width="640" height="360" controls>
-  <source src="placeholder_video_url_remove_comments_on_copy.mp4" type="video/mp4">
+<video width="640" height="360" autoplay loop controls>
+  <source src="https://cringe.live/videos/copy-nocomments.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
@@ -108,7 +108,7 @@ You can modify these settings in your VSCode settings.json file or through the S
 
 1. Open Visual Studio Code
 2. Go to the Extensions view (Ctrl+Shift+X)
-3. Search for "KMacros"
+3. Search for "kmacros"
 4. Click Install
 
 ## Usage

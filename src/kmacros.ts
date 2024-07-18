@@ -39,8 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const document = editor.document;
-        const selection = editor.selection;
-        const cursorPosition = selection.active;
+        const cursorPosition = editor.selection.active;
 
         // Find the start and end of the HTML element
         const elementRange = findHtmlElementRange(document, cursorPosition);
@@ -62,8 +61,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
     );
 
-  context.subscriptions.push(cloneHtmlElementWithoutIncrementDisposable);
-
   let cloneHtmlElementDisposable = vscode.commands.registerCommand(
     "kmacros.cloneHtmlElement",
     async () => {
@@ -73,8 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const document = editor.document;
-      const selection = editor.selection;
-      const cursorPosition = selection.active;
+      const cursorPosition = editor.selection.active;
 
       // Find the start and end of the HTML element
       const elementRange = findHtmlElementRange(document, cursorPosition);
@@ -96,8 +92,6 @@ export function activate(context: vscode.ExtensionContext) {
       await vscode.commands.executeCommand("editor.action.formatDocument");
     }
   );
-
-  context.subscriptions.push(cloneHtmlElementDisposable);
 
   function findHtmlElementRange(
     document: vscode.TextDocument,
@@ -137,22 +131,39 @@ export function activate(context: vscode.ExtensionContext) {
       return null;
     }
 
-    // Find closing tag
-    const closeTagRegex = new RegExp(`</${openTagName}\\s*>`, "gi");
-    let match;
-    let lastMatch: RegExpExecArray | null = null;
-
-    while ((match = closeTagRegex.exec(text)) !== null) {
-      if (match.index >= offset) {
-        lastMatch = match;
-        break;
+    // Find closing tag or end of self-closing tag
+    depth = 1;
+    endOffset = startOffset + 1;
+    while (endOffset < text.length) {
+      if (text[endOffset] === "<") {
+        if (text[endOffset + 1] === "/") {
+          const closeTagStart = endOffset + 2;
+          const closeTagEnd = text.indexOf(">", closeTagStart);
+          if (closeTagEnd !== -1) {
+            const closeTagName = text
+              .substring(closeTagStart, closeTagEnd)
+              .trim();
+            if (closeTagName === openTagName) {
+              depth--;
+              if (depth === 0) {
+                endOffset = closeTagEnd + 1;
+                break;
+              }
+            }
+          }
+        } else if (
+          text.substr(endOffset, openTagName.length + 1) ===
+          "<" + openTagName
+        ) {
+          depth++;
+        }
+      } else if (text[endOffset] === "/" && text[endOffset + 1] === ">") {
+        if (depth === 1) {
+          endOffset += 2;
+          break;
+        }
       }
-    }
-
-    if (lastMatch) {
-      endOffset = lastMatch.index + lastMatch[0].length;
-    } else {
-      return null;
+      endOffset++;
     }
 
     if (startOffset < endOffset) {
@@ -179,19 +190,23 @@ export function activate(context: vscode.ExtensionContext) {
    * from the contents of the current line if you don't have anything
    * selected.
    *
-   * Try it out by selecting this: Math.cos(0.5);
+   * Try it out by selecting this line: Math.cos(0.5)
    * and pressing Alt + 0.
-   * It will output: 0.479425538604203
+   * It will output: 0.8775825618903728
    *
-   * You can also eval this one: eval(Math.sin(0.5));
-   * and it will output this:    0.479425538604203
+   * You can also eval this one: Math.sin(1);
+   * and it will output this:    0.8414709848078965
    *
    * Or.. if you are a game developer, you can also do silly stuff
-   * like `Math.PI*2` and it will output: 6.283185307179586
-   * Or.. `Math.cos(0.5)` and it will output: 0.8775825618903728
+   * like Math.PI*2 and it will output: 6.283185307179586
    *
    * You can also flip booleans case sensitively, try it out!
-   * This false is true, and this True is False.
+   *
+   * "Only a false bitch would know what to do in this situation!"
+   *
+   * if (brain.dead == true) {
+   *     // Do nothing
+   * }
    */
   let hotdogDisposable = vscode.commands.registerCommand(
     "kmacros.hotdog",
@@ -201,71 +216,87 @@ export function activate(context: vscode.ExtensionContext) {
         let selection = editor.selection;
         let text = editor.document.getText(selection);
         let fullLineText = "";
-
-        // If no text is selected, get the text of the current line
         if (text === "") {
           const line = editor.document.lineAt(selection.start.line);
           fullLineText = line.text;
-          text = fullLineText.trim();
+          text = fullLineText;
           selection = new vscode.Selection(line.range.start, line.range.end);
         }
-
         try {
-          let result: string | number;
+          let result: string | number | undefined;
           let matchStart = 0;
           let matchEnd = 0;
           let expression: string;
 
-          // Function to flip boolean values
+          // Function to flip boolean
           const flipBoolean = (value: string): string => {
-            const lowerValue = value.toLowerCase();
-            return lowerValue === "true"
-              ? "false"
-              : lowerValue === "false"
-              ? "true"
-              : value;
+            return value.replace(/\b(true|false|True|False)\b/g, (match) => {
+              return match === "true"
+                ? "false"
+                : match === "false"
+                ? "true"
+                : match === "True"
+                ? "False"
+                : match === "False"
+                ? "True"
+                : match;
+            });
           };
 
-          // Check for delimited expressions first
-          const delimiterMatch = fullLineText.match(/:\s*(.+?);/);
-          if (delimiterMatch) {
-            expression = delimiterMatch[1].trim();
-            matchStart = fullLineText.indexOf(expression);
-            matchEnd = matchStart + expression.length;
-            result = eval(expression);
-          } else {
-            // Check for embedded booleans
-            const booleanMatch = fullLineText.match(
-              /\b(true|false|True|False)\b/
+          // Function to extract expression from possible comment or backticks
+          const extractExpression = (
+            input: string
+          ): [number, number, string] => {
+            const trimmed = input.trim().replace(/^[*/-]+\s*/, "");
+            const backtickMatch = trimmed.match(/`([^`]+)`/);
+            if (backtickMatch) {
+              const start = input.indexOf(backtickMatch[0]);
+              const end = start + backtickMatch[0].length;
+              return [start, end, backtickMatch[1]];
+            }
+            const exprMatch = trimmed.match(
+              /(Math\.\w+\([^)]*\)(?:\s*[-+*/]\s*[\d.]+)?|(?:\d+(?:\.\d+)?|\([^)]+\))(?:\s*[-+*/]\s*(?:\d+(?:\.\d+)?|\([^)]+\)))*|\btrue\b|\bfalse\b|\bTrue\b|\bFalse\b|(?:Math\.PI\s*[-+*/]\s*)*\d+(?:\.\d+)?)(?:;?\s*|$)/
             );
-            if (booleanMatch) {
-              expression = booleanMatch[1];
-              matchStart = booleanMatch.index ?? 0; // Use 0 as a fallback if index is undefined
-              matchEnd = matchStart + expression.length;
+            if (exprMatch) {
+              const start = input.indexOf(exprMatch[0]);
+              const end = start + exprMatch[0].length;
+              return [start, end, exprMatch[0].replace(/;$/, "")];
+            }
+            return [0, 0, ""];
+          };
+
+          [matchStart, matchEnd, expression] = extractExpression(text);
+
+          if (expression) {
+            if (expression.match(/\b(true|false|True|False)\b/)) {
               result = flipBoolean(expression);
             } else {
-              throw new Error(
-                "No valid expression or boolean found in the line"
-              );
+              result = new Function(`return ${expression}`)();
             }
-          }
 
-          // Replace only the matched expression or boolean
-          editor.edit((editBuilder) => {
-            if (fullLineText) {
+            // Ensure result is always a string
+            const resultString =
+              result !== undefined ? result.toString() : "undefined";
+
+            editor.edit((editBuilder) => {
               const start = new vscode.Position(
                 selection.start.line,
                 matchStart
               );
               const end = new vscode.Position(selection.start.line, matchEnd);
+
+              // Check if there's already a space or non-alphanumeric character after the boolean
+              const charAfterMatch = text.charAt(matchEnd);
+              const suffix = /[a-zA-Z0-9]/.test(charAfterMatch) ? " " : "";
+
               editBuilder.replace(
                 new vscode.Range(start, end),
-                result.toString()
+                resultString + suffix
               );
-            } else {
-              editBuilder.replace(selection, result.toString());
-            }
-          });
+            });
+          } else {
+            vscode.window.showInformationMessage("No valid expression found.");
+          }
         } catch (error) {
           let errorMessage = "An error occurred during calculation";
           if (error instanceof Error) {
