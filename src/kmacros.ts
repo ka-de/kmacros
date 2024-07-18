@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
             lines.forEach((line, index) => {
               // Remove newline characters within the line and trim whitespace
               const sanitizedLine = line.replace(/\n/g, "").trim();
-              const formattedText = `- [${sanitizedLine}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/ponyxl_loras_shrunk/${sanitizedLine.trim()}?download=true)`;
+              const formattedText = `- [${sanitizedLine}](https://huggingface.co/k4d3/yiff_toolkit/resolve/main/${sanitizedLine.trim()}?download=true)`;
               replacedText += formattedText;
               if (index < lines.length - 1) {
                 replacedText += "\n"; // Add a newline only if it's not the last line
@@ -283,13 +283,22 @@ export function activate(context: vscode.ExtensionContext) {
 
   let selectAllDisposable = vscode.commands.registerCommand(
     "kmacros.selectAll",
-    () => {
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
         const lastLine = editor.document.lineCount - 1;
         const lastLineLength = editor.document.lineAt(lastLine).text.length;
         const selection = new vscode.Selection(0, 0, lastLine, lastLineLength);
         editor.selection = selection;
+
+        // Copy selected text to clipboard
+        const selectedText = editor.document.getText(selection);
+        await vscode.env.clipboard.writeText(selectedText);
+
+        // Show notification
+        vscode.window.showInformationMessage(
+          "Current file is copied to clipboard."
+        );
       }
     }
   );
