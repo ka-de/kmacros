@@ -1,6 +1,6 @@
 # kmacros
 
-<!-- markdownlint-disable MD033 -->
+![An image of a hotdogwolf.](https://cringe.live/images/kmacros/hotdogwolf.png)
 
 `kmacros` is a powerful Visual Studio Code extension that provides a set of macros, keybindings, and commands to enhance your coding productivity. This extension is designed for developers who value efficiency and seek to streamline their workflow.
 
@@ -12,10 +12,7 @@
 
 This command clones the HTML element at the current cursor position.
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/htmlclone_without_increment.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![A gif of the HTMLClone command](https://cringe.live/images/kmacros/htmlclone_without_increment.gif)
 
 ### 2. HTMLClone With Increment
 
@@ -23,12 +20,9 @@ This command clones the HTML element at the current cursor position.
 
 Similar to the previous command, this clones the HTML element at the cursor position but also increments any numbers found within the element.
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/htmlclone_with_increment.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![A gif of the HTMLClone command](https://cringe.live/images/kmacros/htmlclone_with_increment.gif)
 
-### 3. Calculate Selected Expression or Flip Booleans
+### 3. Calculate Selected Expression or Flip Booleans (Hotdog)
 
 **Shortcut:** `Alt + 0`
 
@@ -43,10 +37,7 @@ Examples:
 - Selecting `Math.cos(0.5)` and using the shortcut will output `0.8775825618903728`
 - Flipping `true` to `false` or `True` to `False` (case-sensitive)
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/hotdog-disposable.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![An image of the hotdog command](https://cringe.live/images/kmacros/hotdog-disposable.gif)
 
 ### 4. Select All Text in File + Copy to Clipboard
 
@@ -56,10 +47,7 @@ Selects all text in the current file and then copies it to the clipboard.
 
 **Note:** This command is very handy for programmers using Large Language Models!
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/selectall-copy.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![An image of the select all command](https://cringe.live/images/selectall-copy.gif)
 
 ### 5. Inline Rust Macro Arguments
 
@@ -67,10 +55,7 @@ Selects all text in the current file and then copies it to the clipboard.
 
 This command inlines arguments in Rust macros, making them more readable and concise.
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/inline-arguments.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![An image of the inline rust macro arguments command](https://cringe.live/images/kmacros/inline-arguments.gif)
 
 ### 6. Create HuggingFace Link
 
@@ -78,10 +63,7 @@ This command inlines arguments in Rust macros, making them more readable and con
 
 Generates a HuggingFace download link for the selected text, formatting it as a Markdown link.
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/hf-link.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![An image of the create huggingface link command](https://cringe.live/images/kmacros/hf-link.gif)
 
 ### 7. Remove Comments on Copy
 
@@ -89,10 +71,7 @@ Generates a HuggingFace download link for the selected text, formatting it as a 
 
 This command overrides the default copy behavior. When copying text, it removes comments and can optionally remove whitespace, even in Markdown files (configurable).
 
-<video width="640" height="360" autoplay loop controls>
-  <source src="https://cringe.live/videos/copy-nocomments.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![An image of the remove comments on copy command](https://cringe.live/images/kmacros/copy-nocomments.gif)
 
 ## Configuration
 
