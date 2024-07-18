@@ -72,7 +72,7 @@
       {
         "command": "kmacros.cloneHtmlElement",
         "key": "ctrl+[",
-        "when": "editorTextFocus && (editorLangId == 'html' || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'javascriptreact' || editorLangId == 'typescriptreact' || editorLangId == 'markdown')"
+        "when": "editorTextFocus"
       },
       {
         "command": "kmacros.hotdog",
