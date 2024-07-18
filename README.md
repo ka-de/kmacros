@@ -1,6 +1,6 @@
 # kmacros
 
-![An image of a hotdogwolf.](https://cringe.live/images/kmacros/hotdogwolf.png)
+![An image of a hotdogwolf, guardian spirit of Rust developers.](https://cringe.live/images/kmacros/hotdogwolf.png)
 
 `kmacros` is a powerful Visual Studio Code extension that provides a set of macros, keybindings, and commands to enhance your coding productivity. This extension is designed for developers who value efficiency and seek to streamline their workflow.
 
