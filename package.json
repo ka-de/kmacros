@@ -5,7 +5,7 @@
   "icon": "images/icon.png",
   "publisher": "kmacros",
   "license": "MIT",
-  "version": "0.0.101",
+  "version": "0.0.102",
   "permissions": [
     "clipboard"
   ],
@@ -44,6 +44,10 @@
     },
     "commands": [
       {
+        "command": "kmacros.cloneHtmlElementWithoutIncrement",
+        "title": "HTMLClone Without Increment"
+      },
+      {
         "command": "kmacros.cloneHtmlElement",
         "title": "HTMLClone"
       },
@@ -69,6 +73,11 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "kmacros.cloneHtmlElementWithoutIncrement",
+        "key": "ctrl+]",
+        "when": "editorTextFocus"
+      },
       {
         "command": "kmacros.cloneHtmlElement",
         "key": "ctrl+[",

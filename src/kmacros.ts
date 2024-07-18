@@ -29,6 +29,41 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  let cloneHtmlElementWithoutIncrementDisposable =
+    vscode.commands.registerCommand(
+      "kmacros.cloneHtmlElementWithoutIncrement",
+      async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          return;
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+        const cursorPosition = selection.active;
+
+        // Find the start and end of the HTML element
+        const elementRange = findHtmlElementRange(document, cursorPosition);
+        if (!elementRange) {
+          vscode.window.showInformationMessage(
+            "No HTML element found at cursor position."
+          );
+          return;
+        }
+
+        const elementText = document.getText(elementRange);
+
+        await editor.edit((editBuilder) => {
+          editBuilder.insert(elementRange.end, "\n" + elementText);
+        });
+
+        // Format the document
+        await vscode.commands.executeCommand("editor.action.formatDocument");
+      }
+    );
+
+  context.subscriptions.push(cloneHtmlElementWithoutIncrementDisposable);
+
   let cloneHtmlElementDisposable = vscode.commands.registerCommand(
     "kmacros.cloneHtmlElement",
     async () => {
