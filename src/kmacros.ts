@@ -29,62 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  function findHtmlElementRange(
-    document: vscode.TextDocument,
-    position: vscode.Position
-  ): vscode.Range | null {
-    const text = document.getText();
-    const offset = document.offsetAt(position);
-
-    let startOffset = offset;
-    let endOffset = offset;
-    let depth = 0;
-
-    // Find opening tag
-    while (startOffset > 0) {
-      if (text[startOffset] === ">") {
-        depth++;
-      } else if (text[startOffset] === "<") {
-        if (depth === 0) {
-          break;
-        }
-        depth--;
-      }
-      startOffset--;
-    }
-
-    // Find closing tag
-    depth = 0;
-    while (endOffset < text.length) {
-      if (text[endOffset] === "<") {
-        depth++;
-      } else if (text[endOffset] === ">") {
-        if (depth === 0) {
-          endOffset++;
-          break;
-        }
-        depth--;
-      }
-      endOffset++;
-    }
-
-    if (startOffset < endOffset) {
-      return new vscode.Range(
-        document.positionAt(startOffset),
-        document.positionAt(endOffset)
-      );
-    }
-
-    return null;
-  }
-
-  function incrementNumbers(text: string): string {
-    return text.replace(/\d+/g, (match) => {
-      const num = parseInt(match, 10);
-      return (num + 1).toString();
-    });
-  }
-
   let cloneHtmlElementDisposable = vscode.commands.registerCommand(
     "kmacros.cloneHtmlElement",
     async () => {
@@ -119,6 +63,79 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(cloneHtmlElementDisposable);
+
+  function findHtmlElementRange(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): vscode.Range | null {
+    const text = document.getText();
+    const offset = document.offsetAt(position);
+
+    let startOffset = offset;
+    let endOffset = offset;
+    let openTagName = "";
+    let depth = 0;
+
+    // Find opening tag
+    while (startOffset > 0) {
+      if (text[startOffset] === ">") {
+        depth++;
+      } else if (text[startOffset] === "<") {
+        if (depth === 0) {
+          // Extract tag name
+          let tagNameEnd = startOffset + 1;
+          while (
+            tagNameEnd < text.length &&
+            /[a-zA-Z0-9]/.test(text[tagNameEnd])
+          ) {
+            tagNameEnd++;
+          }
+          openTagName = text.substring(startOffset + 1, tagNameEnd);
+          break;
+        }
+        depth--;
+      }
+      startOffset--;
+    }
+
+    if (!openTagName) {
+      return null;
+    }
+
+    // Find closing tag
+    const closeTagRegex = new RegExp(`</${openTagName}\\s*>`, "gi");
+    let match;
+    let lastMatch: RegExpExecArray | null = null;
+
+    while ((match = closeTagRegex.exec(text)) !== null) {
+      if (match.index >= offset) {
+        lastMatch = match;
+        break;
+      }
+    }
+
+    if (lastMatch) {
+      endOffset = lastMatch.index + lastMatch[0].length;
+    } else {
+      return null;
+    }
+
+    if (startOffset < endOffset) {
+      return new vscode.Range(
+        document.positionAt(startOffset),
+        document.positionAt(endOffset)
+      );
+    }
+
+    return null;
+  }
+
+  function incrementNumbers(text: string): string {
+    return text.replace(/\d+/g, (match) => {
+      const num = parseInt(match, 10);
+      return (num + 1).toString();
+    });
+  }
 
   /**
    * `hotdogDisposable` is a cooler function than it sounds!

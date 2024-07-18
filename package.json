@@ -5,7 +5,7 @@
   "icon": "images/icon.png",
   "publisher": "kmacros",
   "license": "MIT",
-  "version": "0.0.100",
+  "version": "0.0.101",
   "permissions": [
     "clipboard"
   ],
