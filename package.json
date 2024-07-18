@@ -5,7 +5,7 @@
   "icon": "images/icon.png",
   "publisher": "undefined_publisher",
   "license": "MIT",
-  "version": "0.0.99",
+  "version": "0.0.100",
   "permissions": [
     "clipboard"
   ],
@@ -44,6 +44,10 @@
     },
     "commands": [
       {
+        "command": "kmacros.cloneHtmlElement",
+        "title": "HTMLClone"
+      },
+      {
         "command": "kmacros.hotdog",
         "title": "Calculate Selected Expression or Flip Booleans"
       },
@@ -65,6 +69,11 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "kmacros.cloneHtmlElement",
+        "key": "ctrl+[",
+        "when": "editorTextFocus && (editorLangId == 'html' || editorLangId == 'javascript' || editorLangId == 'typescript' || editorLangId == 'javascriptreact' || editorLangId == 'typescriptreact' || editorLangId == 'markdown')"
+      },
       {
         "command": "kmacros.hotdog",
         "key": "alt+0",

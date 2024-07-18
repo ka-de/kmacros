@@ -29,6 +29,97 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  function findHtmlElementRange(
+    document: vscode.TextDocument,
+    position: vscode.Position
+  ): vscode.Range | null {
+    const text = document.getText();
+    const offset = document.offsetAt(position);
+
+    let startOffset = offset;
+    let endOffset = offset;
+    let depth = 0;
+
+    // Find opening tag
+    while (startOffset > 0) {
+      if (text[startOffset] === ">") {
+        depth++;
+      } else if (text[startOffset] === "<") {
+        if (depth === 0) {
+          break;
+        }
+        depth--;
+      }
+      startOffset--;
+    }
+
+    // Find closing tag
+    depth = 0;
+    while (endOffset < text.length) {
+      if (text[endOffset] === "<") {
+        depth++;
+      } else if (text[endOffset] === ">") {
+        if (depth === 0) {
+          endOffset++;
+          break;
+        }
+        depth--;
+      }
+      endOffset++;
+    }
+
+    if (startOffset < endOffset) {
+      return new vscode.Range(
+        document.positionAt(startOffset),
+        document.positionAt(endOffset)
+      );
+    }
+
+    return null;
+  }
+
+  function incrementNumbers(text: string): string {
+    return text.replace(/\d+/g, (match) => {
+      const num = parseInt(match, 10);
+      return (num + 1).toString();
+    });
+  }
+
+  let cloneHtmlElementDisposable = vscode.commands.registerCommand(
+    "kmacros.cloneHtmlElement",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+
+      const document = editor.document;
+      const selection = editor.selection;
+      const cursorPosition = selection.active;
+
+      // Find the start and end of the HTML element
+      const elementRange = findHtmlElementRange(document, cursorPosition);
+      if (!elementRange) {
+        vscode.window.showInformationMessage(
+          "No HTML element found at cursor position."
+        );
+        return;
+      }
+
+      const elementText = document.getText(elementRange);
+      const clonedText = incrementNumbers(elementText);
+
+      await editor.edit((editBuilder) => {
+        editBuilder.insert(elementRange.end, "\n" + clonedText);
+      });
+
+      // Format the document
+      await vscode.commands.executeCommand("editor.action.formatDocument");
+    }
+  );
+
+  context.subscriptions.push(cloneHtmlElementDisposable);
+
   /**
    * `hotdogDisposable` is a cooler function than it sounds!
    * It can either run an eval on an expression you have selected,
